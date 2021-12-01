@@ -27,14 +27,16 @@ class MenMessage:
 
 
 class Table_OP:
-    """
-    创建表格，插入数据
-    """
+    """创建表格，插入数据"""
     def __init__(self, database_path):
         self.conn = sqlite3.connect(database_path)
         self.cursor = self.conn.cursor()
 
     def create_table(self, table_name, *args):
+        """创建表
+        :param table_name:表名
+        :param args: 表元素定义
+        """
         table_seg1 = ""
         for i in args:
             table_seg1 += i
@@ -50,9 +52,18 @@ class Table_OP:
         except:
             print("创建表出错，请检查！")
 
+    def close_link(self):
+        '''关闭连接'''
+        self.cursor.close()
+        self.conn.close()
 
-    def insert_table_row(self, table_name, keys, values, dict1):
-        '''插入数据的方法'''
+    def insert_table_row(self, table_name, dict1):
+        """插入数据的方法
+        :param table_name:表名
+        :param dict1: 插入的字典
+        """
+        keys = ','.join(dict1.keys())#表中元素名
+        values = ', '.join(['?'] * len(dict1.keys()))#表中元素
         insert_data_sql = 'INSERT INTO {table_name}({keys}) values ({value})'.format(table_name=table_name, keys=keys, value=values)
         try:
             self.cursor.execute(insert_data_sql, tuple(dict1.values()))
@@ -75,42 +86,44 @@ class Table_OP:
             print("fail!")
             self.conn.rollback()
 
-    def close_link(self):
-        '''关闭连接'''
-        self.cursor.close()
-        self.conn.close()
-
     def drop_table(self, table_name):
         '''删除表的方法'''
         drop_table_sql = "DROP TABLE IF EXISTS %s" % table_name
         # backup_table_sql = "MYSQLDUMP -u root -p {databse} {table_name} > {tabel_name_bck} ".format(
         #     databse='usermessage', table_name=table_name, tabel_name_bck=table_name + 'bck.sql')
         self.cursor.execute("select name from sqlite_master")
-        tables = self.cursor.fetchone()  # 以序列的序列方式返回余下所有行
-        # print(tables)
+        tables = self.cursor.fetchall()  # 列出所有表名
+        print(tables)
         try:
             for i in tables:
-                if i == table_name:
+                if i[0] == table_name:#删除指定表名
                     # self.cursor.execute(backup_table_sql)  #备份表会出错，问题暂时未知
                     self.cursor.execute(drop_table_sql)
-                # 表进行备份
-                # 执行删除命令
+                    print("Done:",drop_table_sql)
                 else:
-                    print("此前未新建过相同表")
+                    pass#print("此前未新建过相同表")
         except:
             print("删除表失败！")
 
-if __name__ == '__main__':
+    def insert_table_col(self, table_name, new_col_name):
+        self.cursor.execute("alter table {} add column {}".format(table_name, new_col_name))
 
+if __name__ == '__main__':
+    import os
+    os.remove("tmp2.db")
     start = time.perf_counter()
     list_rows = []
-    DATA = range(1, 101)
+    DATA = range(1, 11)
     database_path = 'tmp2.db'
+    table = Table_OP(database_path)
+
+    # 新建表示例
     table_name = 'usermessage'  # 表名称
     table_seg = ('name varchar(12) NOT NULL', "Email varchar(20)", "age int", "sex char(4)")
-    table = Table_OP(database_path)
     table.create_table(table_name, *table_seg)  # 不定长参数：定义组成元组，调用解元组
-    table.create_table("usermessage2", *table_seg)  # 不定长参数：定义组成元组，调用解元组
+    table.create_table("table_name", *table_seg)  # 不定长参数：定义组成元组，调用解元组
+
+    # 对应表加行示例
     for i in DATA:
         men = MenMessage(
             seg=['W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X',
@@ -134,9 +147,18 @@ if __name__ == '__main__':
         values = ', '.join(['?'] * len(dict1.keys()))
         # print(keys)
         # print(values)
-        # table.insert_table_row(table_name, keys, values, dict1)
-    table.insert_tablemany_row(table_name,list_rows)
-    # table.drop_table(table_name)
-    table.close_link()
-    print("写入{DATA}条数据，耗时{time}秒".format(DATA=i, time=time.perf_counter() - start))
+        table.insert_table_row(table_name, dict1)
+    # table.insert_tablemany_row(table_name,list_rows)
+    print("写入{DATA}条数据，耗时{time}秒".format(DATA=len(DATA), time=time.perf_counter() - start))
 
+
+    # 对应表加列示例
+    new_col_name = "score"
+    table.insert_table_col(table_name,new_col_name)
+
+    # 对应表删除示例
+    table.drop_table(table_name)
+
+
+    # 关闭数据库连接
+    table.close_link()

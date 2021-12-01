@@ -31,4 +31,6 @@ output = c.fetchall()
 # for i in range(10):
 #     output = c.fetchone()
 print(output)
+for out in output:
+    print(out)
 print("t3:{}".format(time.time()-time_b))
