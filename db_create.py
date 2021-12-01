@@ -51,7 +51,7 @@ class Table_OP:
             print("创建表出错，请检查！")
 
 
-    def insert_table(self, table_name, keys, values, dict1):  # https://www.cnblogs.com/xiao-xue-di/p/11570451.html
+    def insert_table_row(self, table_name, keys, values, dict1):
         '''插入数据的方法'''
         insert_data_sql = 'INSERT INTO {table_name}({keys}) values ({value})'.format(table_name=table_name, keys=keys, value=values)
         try:
@@ -63,13 +63,13 @@ class Table_OP:
             self.conn.rollback()
         # print(insert_data_sql)
 
-    def insert_tablemany(self, table_name, list_rows):
+    def insert_tablemany_row(self, table_name, list_rows):
         '''将多条数据插入'''
         # insert_many_sql = "INSERT INTO %s values (%r,%r,%r,%r)"%(table_name, list_rows)
         # print(insert_many_sql)
         try:
 
-            self.cursor.executemany("INSERT INTO usermessage values (%s,%s,%s,%s)", list_rows)
+            self.cursor.executemany("INSERT INTO {} values (?,?,?,?)".format(table_name), list_rows)
             self.conn.commit()
         except:
             print("fail!")
@@ -134,9 +134,9 @@ if __name__ == '__main__':
         values = ', '.join(['?'] * len(dict1.keys()))
         # print(keys)
         # print(values)
-        table.insert_table(table_name, keys, values, dict1)
-    # table.insert_tablemany(table_name,list_rows)
-    table.drop_table(table_name)
+        # table.insert_table_row(table_name, keys, values, dict1)
+    table.insert_tablemany_row(table_name,list_rows)
+    # table.drop_table(table_name)
     table.close_link()
     print("写入{DATA}条数据，耗时{time}秒".format(DATA=i, time=time.perf_counter() - start))
 
