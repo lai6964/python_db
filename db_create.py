@@ -126,6 +126,16 @@ class Table_OP:
         except:
             print("fail!")
             self.conn.rollback()
+
+    def drop_table_row(self, table_name, element):
+        drop_table_sql = "delete from {} where {}={}".format(table_name, tuple(element.keys())[0], tuple(element.values())[0])
+        try:
+            self.cursor.execute(drop_table_sql)
+            self.conn.commit()
+            print("Done:",drop_table_sql)
+        except:
+            print("fail!")
+            self.conn.rollback()
 if __name__ == '__main__':
     import os
     database_path = 'tmp2.db'
@@ -180,6 +190,10 @@ if __name__ == '__main__':
     dict1 = {"score":18}
     condition = {"id":9}
     table.update_table_element(table_name, dict1, condition)
+
+    # 对应表删除行示例
+    condition = {"id":10}
+    table.drop_table_row(table_name, condition)
 
     # # 对应表删除示例
     # table.drop_table(table_name)
