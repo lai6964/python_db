@@ -67,8 +67,8 @@ class Table_OP:
         insert_data_sql = 'INSERT INTO {table_name}({keys}) values ({value})'.format(table_name=table_name, keys=keys, value=values)
         try:
             self.cursor.execute(insert_data_sql, tuple(dict1.values()))
-            # print("插入数据成功！")
             self.conn.commit()
+            print("Done:",'INSERT INTO {table_name}({keys}) values ({value})'.format(table_name=table_name, keys=keys, value=tuple(dict1.values())))
         except:
             print('fail!')
             self.conn.rollback()
@@ -79,7 +79,6 @@ class Table_OP:
         # insert_many_sql = "INSERT INTO %s values (%r,%r,%r,%r)"%(table_name, list_rows)
         # print(insert_many_sql)
         try:
-
             self.cursor.executemany("INSERT INTO {} values (?,?,?,?)".format(table_name), list_rows)
             self.conn.commit()
         except:
@@ -106,20 +105,40 @@ class Table_OP:
             print("删除表失败！")
 
     def insert_table_col(self, table_name, new_col_name):
-        self.cursor.execute("alter table {} add column {}".format(table_name, new_col_name))
+        insert_table_sql = "alter table {} add column {}".format(table_name, new_col_name)
+        try:
+            self.cursor.execute(insert_table_sql)
+            print("Done:", insert_table_sql)
+        except:
+            print("fail!")
+            self.conn.rollback()
 
+    def update_table_element(self, table_name, element, condition):
+        key = tuple(element.keys())[0]
+        value = tuple(element.values())[0]
+        key2 = tuple(condition.keys())[0]
+        value2 = tuple(condition.values())[0]
+        update_table_sql = "update {} set {}={} where {}={}".format(table_name, key, value, key2, value2)
+        try:
+            self.cursor.execute(update_table_sql)
+            self.conn.commit()
+            print("Done:",update_table_sql)
+        except:
+            print("fail!")
+            self.conn.rollback()
 if __name__ == '__main__':
     import os
-    os.remove("tmp2.db")
+    database_path = 'tmp2.db'
+    if os.path.exists(database_path):
+        os.remove(database_path)
     start = time.perf_counter()
     list_rows = []
     DATA = range(1, 11)
-    database_path = 'tmp2.db'
     table = Table_OP(database_path)
 
     # 新建表示例
     table_name = 'usermessage'  # 表名称
-    table_seg = ('name varchar(12) NOT NULL', "Email varchar(20)", "age int", "sex char(4)")
+    table_seg = ("id int primary key", "name varchar(12) NOT NULL", "Email varchar(20)", "age int", "sex char(4)")
     table.create_table(table_name, *table_seg)  # 不定长参数：定义组成元组，调用解元组
     table.create_table("table_name", *table_seg)  # 不定长参数：定义组成元组，调用解元组
 
@@ -136,7 +155,8 @@ if __name__ == '__main__':
         name = ''.join(men.name())
         sex = men.sex()
         age = men.age()
-        char1 = '{"name": name, "email": name+"@163.com" , "age": age, "sex": sex}'
+        id = i
+        char1 = '{"id": id, "name": name, "email": name+"@163.com" , "age": age, "sex": sex}'
         list_row = ((name, name + "@163.com", age, sex),)
         # print(type(list_row))
         list_rows += list_row
@@ -156,8 +176,13 @@ if __name__ == '__main__':
     new_col_name = "score"
     table.insert_table_col(table_name,new_col_name)
 
-    # 对应表删除示例
-    table.drop_table(table_name)
+    # 对应表更新元素
+    dict1 = {"score":18}
+    condition = {"id":9}
+    table.update_table_element(table_name, dict1, condition)
+
+    # # 对应表删除示例
+    # table.drop_table(table_name)
 
 
     # 关闭数据库连接
