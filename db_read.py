@@ -1,3 +1,4 @@
+# coding: utf-8
 import sqlite3
 import time
 
@@ -8,7 +9,7 @@ def dict_factory(cursor, row):
     return d
 
 time_b = time.time()
-con = sqlite3.connect("tmp2.db") #打开数据库
+con = sqlite3.connect("poetry.db") #打开数据库
 con.row_factory = dict_factory
 c = con.cursor() #创建游标对象
 
@@ -25,12 +26,12 @@ time_b = time.time()
 
 # [{'name': 'ECDict'}, {'name': 'sqlite_sequence'}, {'name': 'COMPANY'}, {'name': 'sqlite_autoindex_COMPANY_1'}]
 # [{'name': 'ECDict'}, {'name': 'sqlite_sequence'}, {'name': 'ID'}, {'name': 'Word_INDEX'}]
-c.execute("select * from usermessage")
+c.execute("select * from poetry")
 # c.execute("select * from ECDict limit 2029,1")
 output = c.fetchall()
 # for i in range(10):
 #     output = c.fetchone()
-print(output)
+# print(output)
 for out in output:
     print(out)
 print("t3:{}".format(time.time()-time_b))
